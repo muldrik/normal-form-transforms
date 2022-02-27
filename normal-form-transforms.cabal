@@ -1,0 +1,41 @@
+cabal-version:      2.4
+name:               normal-form-transforms
+version:            0.1.0.0
+
+
+synopsis: Set of functions that transofrm statement logic formulas to NNF, DNF and CNF
+
+author:             muldrik
+maintainer:         muldrik@yandex.ru
+
+
+common shared
+  default-language: Haskell2010
+  build-depends:
+    base ^>= 4.14,
+    containers ^>= 0.6,
+    mtl ^>= 2.2.2
+  ghc-options:
+    -Wall
+
+library nf-transforms
+    import: shared
+    hs-source-dirs: src
+    exposed-modules:
+        Formula
+
+executable nf-transforms-executable
+    import: shared
+    main-is:          Main.hs
+    hs-source-dirs:   app
+
+Test-Suite nf-transforms-test
+    import: shared,
+    type:       exitcode-stdio-1.0
+    main-is:    Test.hs
+    hs-source-dirs: tests
+    build-depends: 
+        nf-transforms,
+        tasty ^>=1.4,
+        tasty-hunit,
+        tasty-quickcheck,
