@@ -57,8 +57,8 @@ fromNNFtoDNF :: NNF -> DNF
 fromNNFtoDNF (NNF f) = DNF (fromNNFtoDNF' f) where
   fromNNFtoDNF' (a :& (b :| c)) = fromNNFtoDNF' (a :& b) :| fromNNFtoDNF' (a :& c)
   fromNNFtoDNF' ((b :| c) :& a) = fromNNFtoDNF' (a :& b) :| fromNNFtoDNF' (a :& c)
-  fromNNFtoDNF' (a :& b) | not (isConjuction a) = fromNNFtoDNF' $ fromNNFtoDNF' a :& b
-                         | not (isConjuction b) = fromNNFtoDNF' $ a :& fromNNFtoDNF' b
+  fromNNFtoDNF' (a :& b) | not (isConjunction a) = fromNNFtoDNF' $ fromNNFtoDNF' a :& b
+                         | not (isConjunction b) = fromNNFtoDNF' $ a :& fromNNFtoDNF' b
                          | otherwise = a :& b
   fromNNFtoDNF' (a :| b) = fromNNFtoDNF' a :| fromNNFtoDNF' b
   fromNNFtoDNF' x = x 
@@ -66,8 +66,6 @@ fromNNFtoDNF (NNF f) = DNF (fromNNFtoDNF' f) where
 
 toDNF :: Formula -> DNF
 toDNF = fromNNFtoDNF . toNNF
-
-
 
 
 isLiteralOrConst :: Formula -> Bool
@@ -78,19 +76,40 @@ isLiteralOrConst (Not (Var _)) = True
 isLiteralOrConst _ = False
 
 
-isConjuction :: Formula -> Bool
-isConjuction (f1 :& f2) = isConjuction f1 && isConjuction f2
-isConjuction (_ :| _) = False
-isConjuction f = isLiteralOrConst f
+isConjunction :: Formula -> Bool
+isConjunction (f1 :& f2) = isConjunction f1 && isConjunction f2
+isConjunction (_ :| _) = False
+isConjunction f = isLiteralOrConst f
 
+
+isDisjunction :: Formula -> Bool
+isDisjunction (f1 :| f2) = isDisjunction f1 || isDisjunction f2
+isDisjunction (_ :& _) = False
+isDisjunction f = isLiteralOrConst f
 
 
 isDNF :: Formula -> Bool
-isDNF conj@(_ :& _) = isConjuction conj
+isDNF conj@(_ :& _) = isConjunction conj
 isDNF (f1 :| f2) = isDNF f1 && isDNF f2
 isDNF f = isLiteralOrConst f
 
 
+fromNNFtoCNF :: NNF -> CNF
+fromNNFtoCNF (NNF f) = CNF (fromNNFtoCNF' f) where
+  fromNNFtoCNF' (a :| (b :& c)) = fromNNFtoCNF' (a :| b) :& fromNNFtoCNF' (a :| c)
+  fromNNFtoCNF' ((b :& c) :| a) = fromNNFtoCNF' (a :| b) :& fromNNFtoCNF' (a :| c)
+  fromNNFtoCNF' (a :| b) | not (isDisjunction a) = fromNNFtoCNF' $ fromNNFtoCNF' a :| b
+                         | not (isDisjunction b) = fromNNFtoCNF' $ a :| fromNNFtoCNF' b
+                         | otherwise = a :| b
+  fromNNFtoCNF' (a :& b) = fromNNFtoCNF' a :& fromNNFtoCNF' b
+  fromNNFtoCNF' x = x 
 
 
+toCNF :: Formula -> CNF
+toCNF = fromNNFtoCNF . toNNF
+  
 
+isCNF :: Formula -> Bool
+isCNF disj@(_ :| _) = isDisjunction disj
+isCNF (f1 :& f2) = isCNF f1 && isCNF f2
+isCNF f = isLiteralOrConst f

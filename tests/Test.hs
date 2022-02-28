@@ -29,6 +29,8 @@ quickTests = testGroup "Quick tests"
     QC.testProperty "NNF conversion preserves equivalence" $ \f -> toNNF f `equiv` f,
     QC.testProperty "NNF conversion works" $ isNNF . getNNF . toNNF,
     QC.testProperty "DNF conversion preserves equivalence" $ \f -> toDNF (getSmallFormula f) `equiv` f,
-    QC.testProperty "DNF conversion works" $ isDNF . getDNF . toDNF
+    QC.testProperty "DNF conversion works" $ isDNF . getDNF . toDNF . getSmallFormula,
+    QC.testProperty "CNF conversion preserves equivalence" $ \f -> toCNF (getSmallFormula f) `equiv` f,
+    QC.testProperty "CNF conversion works" $ isCNF . getCNF . toCNF . getSmallFormula
   ]
 
