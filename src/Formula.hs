@@ -67,7 +67,7 @@ instance Arbitrary StandardBasis where
       ]
 
 instance Arbitrary SmallFormula where
-  arbitrary = SmallFormula <$> helper 2 where
+  arbitrary = SmallFormula <$> helper 4 where
     helper :: Int -> Gen Formula
     helper 0 = frequency 
       [
