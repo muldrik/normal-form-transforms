@@ -33,7 +33,7 @@ toNNF f = let (Stb inStandardBasis) = toStandardBasis f in NNF (toNNF' inStandar
       f1' :| f2'
   toNNF' (Not Tru) = Fls
   toNNF' (Not Fls) = Tru
-  toNNF' f@(Not (Var _)) = f
+  toNNF' g@(Not (Var _)) = g
   toNNF' Tru = Tru
   toNNF' Fls = Fls
   toNNF' (Var x) = Var x
@@ -85,6 +85,7 @@ isConjuction f = isLiteralOrConst f
 
 
 
+isDNF :: Formula -> Bool
 isDNF conj@(_ :& _) = isConjuction conj
 isDNF (f1 :| f2) = isDNF f1 && isDNF f2
 isDNF f = isLiteralOrConst f
