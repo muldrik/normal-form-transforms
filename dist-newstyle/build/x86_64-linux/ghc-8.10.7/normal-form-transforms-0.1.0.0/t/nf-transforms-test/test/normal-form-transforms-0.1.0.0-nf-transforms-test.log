@@ -1,8 +1,0 @@
-Test suite nf-transforms-test: RUNNING...
-Tests
-  Unit tests
-    import test: [32;22mOK[m[32;22m
-[m
-[32;22mAll 1 tests passed[m[32;22m (0.00s)
-[mTest suite nf-transforms-test: PASS
-Test suite logged to: /home/muldrik/Code/uni-course4/mathlogic/normal-form-transforms/dist-newstyle/build/x86_64-linux/ghc-8.10.7/normal-form-transforms-0.1.0.0/t/nf-transforms-test/test/normal-form-transforms-0.1.0.0-nf-transforms-test.log

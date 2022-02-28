@@ -21,8 +21,15 @@ common shared
 library nf-transforms
     import: shared
     hs-source-dirs: src
+    build-depends:
+        tasty-quickcheck
+    other-extensions:
+        RankNTypes,
+        FlexibleInstances
     exposed-modules:
-        Formula
+        Formula,
+        Conversions,
+        Equivalence
 
 executable nf-transforms-executable
     import: shared
@@ -39,3 +46,4 @@ Test-Suite nf-transforms-test
         tasty ^>=1.4,
         tasty-hunit,
         tasty-quickcheck,
+        tasty-smallcheck
