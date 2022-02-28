@@ -83,3 +83,16 @@ equiv f1 f2 = let
         eval1 = evaluate f1 mask
         eval2 = evaluate f2 mask in
           eval1 == eval2 && isJust eval1
+
+
+-- Variables in the first formula are a subset of variables int the second
+equisat :: (Evaluatable a, Evaluatable b) => a -> b -> Bool
+equisat f1 f2 = let
+  vars1 = freeVars f1
+  vars2 = freeVars f2
+  bitmasks = generateAllBitmasks vars2 in
+    vars1 `St.isSubsetOf` vars2 && all sameResult bitmasks where
+      sameResult mask = let
+        eval1 = evaluate f1 mask
+        eval2 = evaluate f2 mask in
+          eval2 == Just False || (eval2 == Just True && eval1 == eval2)

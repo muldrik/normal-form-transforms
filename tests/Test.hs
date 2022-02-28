@@ -10,7 +10,7 @@ import System.Environment (setEnv)
 main :: IO ()
 main = do
     setEnv "TASTY_COLOR" "always"
-    setEnv "TASTY_TIMEOUT" "30"
+    setEnv "TASTY_TIMEOUT" "40"
     defaultMain tests
 
 
@@ -31,6 +31,8 @@ quickTests = testGroup "Quick tests"
     QC.testProperty "DNF conversion preserves equivalence" $ \f -> toDNF (getSmallFormula f) `equiv` f,
     QC.testProperty "DNF conversion works" $ isDNF . getDNF . toDNF . getSmallFormula,
     QC.testProperty "CNF conversion preserves equivalence" $ \f -> toCNF (getSmallFormula f) `equiv` f,
-    QC.testProperty "CNF conversion works" $ isCNF . getCNF . toCNF . getSmallFormula
+    QC.testProperty "CNF conversion works" $ isCNF . getCNF . toCNF . getSmallFormula,
+    QC.testProperty "Tseytin transformation produces equisatisfiable formula" $ \f -> f `equisat` toEquisatCNF (getSmallFormula f),
+    QC.testProperty "Tseytin transformation produces a CNF" $ isCNF . getCNF . toEquisatCNF . getSmallFormula
   ]
 

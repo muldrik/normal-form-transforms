@@ -1,9 +1,10 @@
 module Conversions where
 import Formula
+import Foreign (deRefStablePtr)
 
 
 toStandardBasis :: Formula -> StandardBasis
-toStandardBasis = Stb . fromExtendedBasis where 
+toStandardBasis = Stb . fromExtendedBasis where
   fromExtendedBasis :: Formula -> Formula
   fromExtendedBasis (f1 :| f2) = fromExtendedBasis f1 :| fromExtendedBasis f2
   fromExtendedBasis (f1 :& f2) = fromExtendedBasis f1 :& fromExtendedBasis f2
@@ -49,7 +50,7 @@ isNNF (Not Fls) = True
 isNNF (Not (Var _)) = True
 isNNF (Not _) = False
 isNNF (f1 :| f2) = isNNF f1 && isNNF f2
-isNNF (f1 :& f2) = isNNF f1 && isNNF f2 
+isNNF (f1 :& f2) = isNNF f1 && isNNF f2
 isNNF _ = True
 
 
@@ -61,7 +62,7 @@ fromNNFtoDNF (NNF f) = DNF (fromNNFtoDNF' f) where
                          | not (isConjunction b) = fromNNFtoDNF' $ a :& fromNNFtoDNF' b
                          | otherwise = a :& b
   fromNNFtoDNF' (a :| b) = fromNNFtoDNF' a :| fromNNFtoDNF' b
-  fromNNFtoDNF' x = x 
+  fromNNFtoDNF' x = x
 
 
 toDNF :: Formula -> DNF
@@ -102,14 +103,50 @@ fromNNFtoCNF (NNF f) = CNF (fromNNFtoCNF' f) where
                          | not (isDisjunction b) = fromNNFtoCNF' $ a :| fromNNFtoCNF' b
                          | otherwise = a :| b
   fromNNFtoCNF' (a :& b) = fromNNFtoCNF' a :& fromNNFtoCNF' b
-  fromNNFtoCNF' x = x 
+  fromNNFtoCNF' x = x
 
 
 toCNF :: Formula -> CNF
 toCNF = fromNNFtoCNF . toNNF
-  
+
 
 isCNF :: Formula -> Bool
 isCNF disj@(_ :| _) = isDisjunction disj
 isCNF (f1 :& f2) = isCNF f1 && isCNF f2
 isCNF f = isLiteralOrConst f
+
+
+chooseFreshVar :: String -> Symb
+chooseFreshVar key = "newvar" ++ key
+
+
+toEquisatCNF :: Formula -> CNF
+toEquisatCNF f = let
+  (NNF negationNormalized) = toNNF f
+  (conjunctions, headSymb) =  helper "0" negationNormalized in
+    CNF (getCNF conjunctions :& Var headSymb) where
+
+  helper :: String -> Formula -> (CNF, Symb)
+  helper depthKey (f1 :| f2) = binaryOpBranch depthKey f1 f2 (:|)
+  helper depthKey (f1 :& f2) = binaryOpBranch depthKey f1 f2 (:&)
+  helper depthKey (f1 :-> f2) = binaryOpBranch depthKey f1 f2 (:->)
+  helper depthKey (f1 :<-> f2) = binaryOpBranch depthKey f1 f2 (:<->)
+  helper depthKey (Not form) = unaryOpBranch depthKey form Not
+  helper _ form@(Var x) = (CNF form , x)
+  helper _ form = (CNF form, "")
+
+  binaryOpBranch :: String -> Formula -> Formula -> (Formula -> Formula -> Formula) -> (CNF, Symb)
+  binaryOpBranch depthKey f1 f2 op = let
+    newvar = chooseFreshVar depthKey
+    (leftFormula, leftVar) = helper ('0' : depthKey) f1
+    (rightFormula, rightVar) = helper ('1' : depthKey) f2
+    newConj = toCNF $ Var newvar :<-> (Var rightVar `op` Var leftVar) in
+      (CNF (getCNF newConj :& getCNF leftFormula :& getCNF rightFormula), newvar)
+
+  unaryOpBranch :: String -> Formula -> (Formula -> Formula) -> (CNF, Symb)
+  unaryOpBranch depthKey form op = let
+    newvar = chooseFreshVar depthKey
+    (subFormula, subVar) = helper ('0' : depthKey) form
+    newConj = toCNF $ Var newvar :<-> op (Var subVar) in
+      (CNF (getCNF newConj :& getCNF subFormula), newvar)
+
