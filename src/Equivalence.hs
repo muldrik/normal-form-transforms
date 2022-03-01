@@ -67,12 +67,15 @@ instance Evaluatable Formula where
 
 
 
+-- Generate all combinations of variable values for a given set of variables
 generateAllBitmasks :: St.Set Symb -> [Mp.Map Symb Bool]
 generateAllBitmasks s | St.null s = []
                       | otherwise =  Mp.fromList <$> foldr helper [[]] s where
   helper :: Symb -> [[(Symb, Bool)]] -> [[(Symb, Bool)]]
   helper symb res = (((symb, False) :) <$> res) ++ (((symb, True) :) <$> res)
 
+
+-- Check if 2 formulas are equivalent. For that they must contain the same variables and the first must be true iff the second is true
 equiv :: (Evaluatable a, Evaluatable b) => a -> b -> Bool
 equiv f1 f2 = let
   vars1 = freeVars f1
@@ -85,7 +88,8 @@ equiv f1 f2 = let
           eval1 == eval2 && isJust eval1
 
 
--- Variables in the first formula are a subset of variables int the second
+-- Check is 2 formulas are equisatisfiable
+-- Variables in the first formula must be a subset of variables in the second
 equisat :: (Evaluatable a, Evaluatable b) => a -> b -> Bool
 equisat f1 f2 = let
   vars1 = freeVars f1

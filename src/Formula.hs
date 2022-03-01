@@ -11,14 +11,8 @@ infixl 4 :->
 infixl 5 :|
 infixl 6 :&
 
-{-
-data ExtendedBasisFormula = Classic Formula |
-               ExtendedBasisFormula :-> ExtendedBasisFormula |
-               ExtendedBasisFormula :<-> ExtendedBasisFormula
-               deriving (Eq, Show)
--}
 
-
+-- Formula wrappers for easier function navigations and random formula generation
 newtype StandardBasis = Stb {getStb :: Formula} deriving (Eq, Show)
 newtype NNF = NNF {getNNF :: Formula} deriving (Eq, Show)
 newtype DNF = DNF {getDNF :: Formula} deriving (Eq, Show)
@@ -37,7 +31,7 @@ data Formula = Tru | Fls |
                deriving (Eq, Show)
 
 
-
+-- Used to generate a random formula for quickchecks. For more information visit https://hackage.haskell.org/package/QuickCheck-2.14.2/docs/Test-QuickCheck-Arbitrary.html
 instance Arbitrary Formula where
   arbitrary = let
     varNames = (:[]) <$> choose ('a', 'g')
@@ -54,6 +48,7 @@ instance Arbitrary Formula where
       ]
 
 
+-- Generate a smaller formula to use with exponential functions
 instance Arbitrary SmallFormula where
   arbitrary = SmallFormula <$> helper 3 where
     helper :: Int -> Gen Formula
