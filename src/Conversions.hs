@@ -1,6 +1,5 @@
 module Conversions where
 import Formula
-import Foreign (deRefStablePtr)
 
 
 toStandardBasis :: Formula -> StandardBasis
@@ -51,6 +50,8 @@ isNNF (Not (Var _)) = True
 isNNF (Not _) = False
 isNNF (f1 :| f2) = isNNF f1 && isNNF f2
 isNNF (f1 :& f2) = isNNF f1 && isNNF f2
+isNNF (_ :-> _) = False
+isNNF (_ :<-> _) = False
 isNNF _ = True
 
 
@@ -74,6 +75,8 @@ isLiteralOrConst Tru = True
 isLiteralOrConst Fls = True
 isLiteralOrConst (Var _) = True
 isLiteralOrConst (Not (Var _)) = True
+isLiteralOrConst (Not Tru) = True
+isLiteralOrConst (Not Fls) = True
 isLiteralOrConst _ = False
 
 
@@ -84,7 +87,7 @@ isConjunction f = isLiteralOrConst f
 
 
 isDisjunction :: Formula -> Bool
-isDisjunction (f1 :| f2) = isDisjunction f1 || isDisjunction f2
+isDisjunction (f1 :| f2) = isDisjunction f1 && isDisjunction f2
 isDisjunction (_ :& _) = False
 isDisjunction f = isLiteralOrConst f
 
@@ -122,8 +125,7 @@ chooseFreshVar key = "newvar" ++ key
 
 toEquisatCNF :: Formula -> CNF
 toEquisatCNF f = let
-  (NNF negationNormalized) = toNNF f
-  (conjunctions, headSymb) =  helper "0" negationNormalized in
+  (conjunctions, headSymb) =  helper "0" f in
     CNF (getCNF conjunctions :& Var headSymb) where
 
   helper :: String -> Formula -> (CNF, Symb)
@@ -132,15 +134,18 @@ toEquisatCNF f = let
   helper depthKey (f1 :-> f2) = binaryOpBranch depthKey f1 f2 (:->)
   helper depthKey (f1 :<-> f2) = binaryOpBranch depthKey f1 f2 (:<->)
   helper depthKey (Not form) = unaryOpBranch depthKey form Not
-  helper _ form@(Var x) = (CNF form , x)
-  helper _ form = (CNF form, "")
+  helper _ (Var x) = (CNF Tru , x)
+  helper depth constant = let 
+    newvar = chooseFreshVar depth
+    newConj = toCNF $ Var newvar :<-> constant in
+    (newConj, newvar)
 
   binaryOpBranch :: String -> Formula -> Formula -> (Formula -> Formula -> Formula) -> (CNF, Symb)
   binaryOpBranch depthKey f1 f2 op = let
     newvar = chooseFreshVar depthKey
     (leftFormula, leftVar) = helper ('0' : depthKey) f1
     (rightFormula, rightVar) = helper ('1' : depthKey) f2
-    newConj = toCNF $ Var newvar :<-> (Var rightVar `op` Var leftVar) in
+    newConj = toCNF $ Var newvar :<-> (Var leftVar `op` Var rightVar) in
       (CNF (getCNF newConj :& getCNF leftFormula :& getCNF rightFormula), newvar)
 
   unaryOpBranch :: String -> Formula -> (Formula -> Formula) -> (CNF, Symb)
@@ -149,4 +154,5 @@ toEquisatCNF f = let
     (subFormula, subVar) = helper ('0' : depthKey) form
     newConj = toCNF $ Var newvar :<-> op (Var subVar) in
       (CNF (getCNF newConj :& getCNF subFormula), newvar)
+
 

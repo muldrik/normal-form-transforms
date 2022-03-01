@@ -53,23 +53,11 @@ instance Arbitrary Formula where
         (10, liftA2 (:<->) arbitrary arbitrary)
       ]
 
-instance Arbitrary StandardBasis where
-  arbitrary = Stb <$> let
-    varNames = (:[]) <$> choose ('a', 'g')
-    in frequency 
-      [
-        (5, return Tru),
-        (5, return Fls),
-        (30, Var <$> varNames),
-        (10, Not <$> arbitrary),
-        (10, liftA2 (:|) arbitrary arbitrary),
-        (10, liftA2 (:&) arbitrary arbitrary)
-      ]
 
 instance Arbitrary SmallFormula where
-  arbitrary = SmallFormula <$> helper 2 where
+  arbitrary = SmallFormula <$> helper 3 where
     helper :: Int -> Gen Formula
-    helper 0 = frequency 
+    helper depth | depth <= 0 = frequency 
       [
         (4, Var <$> varNames),
         (1, return Tru),
@@ -78,9 +66,9 @@ instance Arbitrary SmallFormula where
           varNames = (:[]) <$> choose ('a', 'g')
     helper depth = frequency 
       [
-        (20, return Tru),
-        (20, return Fls),
-        (100, Var <$> varNames),
+        (5, return Tru),
+        (5, return Fls),
+        (5, Var <$> varNames),
         (10, Not <$> helper (depth-1)),
         (10, liftA2 (:|) (helper (depth-1)) (helper (depth-1))),
         (10, liftA2 (:&) (helper (depth-1)) (helper (depth-1))),
